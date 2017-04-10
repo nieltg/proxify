@@ -1,0 +1,81 @@
+#!/bin/bash
+# Proxify 01-29-2017 by @nieltg
+
+function url_encode ()
+{
+	# Adapt from: http://stackoverflow.com/a/10660730
+
+	local src buf len ch cv
+
+	src="${1}"
+	len="${#src}"
+
+	for (( pos = 0; pos < len; pos++ ))
+	do
+		ch="${src:${pos}:1}"
+
+		case "${ch}" in
+			[-_.~a-zA-Z0-9])
+				cv="${ch}"
+				;;
+
+			*)
+				printf -v cv '%%%02x' "'${ch}"
+				;;
+		esac
+
+		buf="${buf}${cv}"
+	done
+
+	echo "${buf}"
+}
+
+function ask_host ()
+{
+	local host port
+
+	read -p "Host: " host
+	read -p "Port: " port
+
+	echo "$host:$port"
+}
+
+function ask_auth ()
+{
+	local user pass
+
+	read -p "User: " user
+	read -p "Pass: " -s pass
+	echo > /dev/stderr
+
+	echo "$(url_encode ${user}):$(url_encode ${pass})"
+}
+
+function gen_base ()
+{
+	local host auth is_a base
+
+	host="$(ask_host)"
+
+	read -n1 -p "Authentificate? [Y/N] " is_a
+	echo > /dev/stderr
+
+	if [ "${is_a^^}" == "Y" ]
+	then
+		auth="$(ask_auth)"
+		base="$auth@$host"
+	else
+		base="$host"
+	fi
+
+	echo "$base"
+}
+
+# Main
+
+base="$(gen_base)"
+
+export http_proxy="http://$base"
+export https_proxy="https://$base"
+
+exec $*
