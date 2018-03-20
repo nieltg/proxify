@@ -6,7 +6,7 @@ specified command.
 
 ## Installation
 
-`proxify` is best if it is installed at the system because priviledge escalation
+`proxify` is best if it is installed at the system because privilege escalation
 tools, like `sudo` prohibit some environment variables to be passed to escalated
 command for some security reasons.
 
@@ -31,16 +31,33 @@ $ sudo install -m 755 proxify /usr/local/bin
 $ proxify git pull
 Host: cache.itb.ac.id
 Port: 8080
-Authentificate? [Y/N] y
+Authenticate? [Y/N] y
 User: nieltansah
 Pass:
 Already up-to-date.
 ```
 
 For escalated commands, `proxify` shall be specified to be escalated too because
-priviledge escalation tools, like `sudo` discard some environment variables from
+privilege escalation tools, like `sudo` discard some environment variables from
 user. For example:
 
 ```sh
 $ sudo proxify apt-get install zsh
+```
+
+If you want `proxify` to prompt you for password only, you can use *proxify.conf* to store some configurations for you. Copy *proxify.conf* to your home directory first.
+
+```sh
+$ cp proxify.conf ~
+```
+
+Now, you can open the file, and add your username there. Whenever this file exists, `proxify` will use this file as default configurations.
+
+```conf
+# Do not change the configuration name, only change the values instead.
+# All leading and trailing whitespaces in configuration values will be ignored.
+
+HOST=cache.itb.ac.id
+PORT=8080
+USER=nieltansah
 ```
