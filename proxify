@@ -1,81 +1,128 @@
 #!/bin/bash
-# Proxify 01-29-2017 by @nieltg
 
-function url_encode ()
+# Proxify made by @nieltg on 01/29/2017
+# Configuration and comments added by @segfault1001 on 03/20/2018
+
+function url_encode()
 {
 	# Adapt from: http://stackoverflow.com/a/10660730
 
-	local src buf len ch cv
+	local src buf len ch cv  # local variables
 
-	src="${1}"
-	len="${#src}"
+	src="${1}"  # get the first argument of this function
+	len="${#src}"  # get the length of src
 
 	for (( pos = 0; pos < len; pos++ ))
 	do
-		ch="${src:${pos}:1}"
+		ch="${src:${pos}:1}"  # ch = get 1 character from pos-th position of src
 
-		case "${ch}" in
-			[-_.~a-zA-Z0-9])
-				cv="${ch}"
+		# case <variable> in
+		# pattern)
+		# 	<commands>
+		# ;;
+
+		case "${ch}" in  
+			[-_.~a-zA-Z0-9])  # if ch is one of the following characters
+				cv="${ch}"  # let it be ~~~
 				;;
 
-			*)
-				printf -v cv '%%%02x' "'${ch}"
+			*)  # else
+				printf -v cv '%%%02x' "'${ch}"  # url encode ch using specified format, and put it in cv
+
+				# %% prints %
+				# %02x prints 2 digits of the hexadecimal representation of ch
 				;;
 		esac
 
-		buf="${buf}${cv}"
+		buf="${buf}${cv}"  # append encoded character to buffer
 	done
 
-	echo "${buf}"
+	echo "${buf}"  # return result
 }
 
-function ask_host ()
+function ask_host()
 {
-	local host port
+	local host port  # local variables
 
-	read -p "Host: " host
-	read -p "Port: " port
+	read -p "Host: " host  # prompt for host
+	read -p "Port: " port  # prompt for port
 
-	echo "$host:$port"
+	echo "$host:$port"  # return result
 }
 
-function ask_auth ()
+function ask_pass()
 {
-	local user pass
+	local pass  # local variables
 
-	read -p "User: " user
-	read -p "Pass: " -s pass
-	echo > /dev/stderr
+	read -p "Pass: " -s pass  # promp for password, hide characters
+	echo > /dev/stderr    # prevent newline from being returned
 
-	echo "$(url_encode ${user}):$(url_encode ${pass})"
+	echo "$(url_encode ${pass})"  # return the value of url-encoded password
 }
 
-function gen_base ()
+function ask_auth()
 {
-	local host auth is_a base
+	local user pass  # local variables
 
-	host="$(ask_host)"
+	read -p "User: " user  # prompt for username
+	pass="$(ask_pass)"  # ask for password
 
-	read -n1 -p "Authentificate? [Y/N] " is_a
-	echo > /dev/stderr
+	echo "$(url_encode ${user}):${pass}"  # return the value of url-encoded username appended by password
+}
 
-	if [ "${is_a^^}" == "Y" ]
+function gen_base()
+{
+	local host auth is_a base ask_pass_only  # local variables
+
+	ask_pass_only="$1"
+
+	if [[ "$ask_pass_only" == true ]]
 	then
-		auth="$(ask_auth)"
-		base="$auth@$host"
+		base="$(ask_pass)"  # ask for password only
 	else
-		base="$host"
+		host="$(ask_host)"  # ask host
+
+		read -n1 -p "Authenticate? [Y/N] " is_a  # want to use auth? (read one character only)
+		echo > /dev/stderr  # prevent newline from being returned
+
+		if [ "${is_a^^}" == "Y" ]  # if use auth (convert the answer to uppercase)
+		then
+			auth="$(ask_auth)"  # ask for username and password
+			base="$auth@$host"  # prepend credentials to base
+		else
+			base="$host"  # no auth, no credentials needed
+		fi
 	fi
 
-	echo "$base"
+	echo "$base"  # return result
 }
 
 # Main
 
-base="$(gen_base)"
+conf_file=$(echo ~/proxify.conf)  # path of configuration file
+host_conf_name="HOST"  # configuration name of host
+port_conf_name="PORT"  # configuration name of port
+user_conf_name="USER"  # configuration name of user
 
-export http_proxy="http://$base"
+if [[ -f "$conf_file" ]]  # if configuration file exists
+then
+	# read host, port and username from configuration file
+	conf=$(cat "$conf_file")
+
+	host=$(printf "$conf" | grep -o -P "(?<=$host_conf_name=).+" | sed -e "s/^\s*//g" | sed -e "s/\s*$//g")
+	port=$(printf "$conf" | grep -o -P "(?<=$port_conf_name=).+" | sed -e "s/^\s*//g" | sed -e "s/\s*$//g")
+	user=$(printf "$conf" | grep -o -P "(?<=$user_conf_name=).+" | sed -e "s/^\s*//g" | sed -e "s/\s*$//g")
+
+	base="$(url_encode ${user}):$(gen_base true)@${host}:${port}"
+else
+	base="$(gen_base false)"
+fi
+
+# export base to HTTP and HTTPS
+
+export http_proxy="http://$base" 
 export https_proxy="https://$base"
+
+# execute command
 
 exec $*
