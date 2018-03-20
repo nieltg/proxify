@@ -99,7 +99,7 @@ function gen_base()
 
 # Main
 
-conf_file=$(echo ~/proxify.conf)  # path of configuration file
+conf_file=$(echo ~/.proxify.conf)  # path of configuration file
 host_conf_name="HOST"  # configuration name of host
 port_conf_name="PORT"  # configuration name of port
 user_conf_name="USER"  # configuration name of user

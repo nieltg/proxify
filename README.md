@@ -45,13 +45,7 @@ user. For example:
 $ sudo proxify apt-get install zsh
 ```
 
-If you want `proxify` to prompt you for password only, you can use *proxify.conf* to store some configurations for you. Copy *proxify.conf* to your home directory first.
-
-```sh
-$ cp proxify.conf ~
-```
-
-Now, you can open the file, and add your username there. Whenever this file exists, `proxify` will use this file as default configurations.
+If you want `proxify` to prompt you for password only, you can use *proxify.conf* to store some configurations for you. First, open *proxify.conf*, and fill it with your desired configurations.
 
 ```conf
 # Do not change the configuration name, only change the values instead.
@@ -61,3 +55,11 @@ HOST=cache.itb.ac.id
 PORT=8080
 USER=nieltansah
 ```
+
+When you are done, copy *proxify.conf* to your home directory as *.profixy.conf*.
+
+```sh
+$ cp proxify.conf ~/.proxify.conf
+```
+
+Whenever this file exists, `proxify` will use it as default configurations.
