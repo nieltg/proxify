@@ -63,3 +63,9 @@ $ cp proxify.conf ~/.proxify.conf
 ```
 
 Whenever this file exists, `proxify` will use it as default configurations.
+
+If you want `proxify` to remember your proxy configurations for the whole session (so you don't have to use `proxify` for each command), you can use the command below.
+```sh
+proxify $SHELL
+```
+To quit from your proxified session, use `exit`.
